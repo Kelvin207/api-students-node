@@ -5,10 +5,11 @@ const db = require('./db');
 const app = express();
 const PORT = 8001;
 
-app.use(bodyParser.urlencoded({ extended: false }));
+// ✅ Middlewares para aceptar JSON y form-data (x-www-form-urlencoded)
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// GET todos los estudiantes
+// 🔹 GET todos los estudiantes
 app.get('/students', (req, res) => {
   db.all('SELECT * FROM students', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -16,7 +17,7 @@ app.get('/students', (req, res) => {
   });
 });
 
-// GET un estudiante
+// 🔹 GET un estudiante por ID
 app.get('/student/:id', (req, res) => {
   db.get('SELECT * FROM students WHERE id = ?', [req.params.id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -25,9 +26,14 @@ app.get('/student/:id', (req, res) => {
   });
 });
 
-// POST nuevo estudiante
+// 🔹 POST nuevo estudiante (acepta JSON o form-data)
 app.post('/students', (req, res) => {
-  const { firstname, lastname, gender, age } = req.body;
+  const { firstname, lastname, gender, age } = req.body || {};
+
+  if (!firstname || !lastname || !gender || !age) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+  }
+
   db.run(
     'INSERT INTO students (firstname, lastname, gender, age) VALUES (?, ?, ?, ?)',
     [firstname, lastname, gender, age],
@@ -38,9 +44,14 @@ app.post('/students', (req, res) => {
   );
 });
 
-// PUT actualizar estudiante
+// 🔹 PUT actualizar estudiante
 app.put('/student/:id', (req, res) => {
-  const { firstname, lastname, gender, age } = req.body;
+  const { firstname, lastname, gender, age } = req.body || {};
+
+  if (!firstname || !lastname || !gender || !age) {
+    return res.status(400).json({ error: 'Faltan campos obligatorios.' });
+  }
+
   db.run(
     'UPDATE students SET firstname = ?, lastname = ?, gender = ?, age = ? WHERE id = ?',
     [firstname, lastname, gender, age, req.params.id],
@@ -51,7 +62,7 @@ app.put('/student/:id', (req, res) => {
   );
 });
 
-// DELETE estudiante
+// 🔹 DELETE estudiante
 app.delete('/student/:id', (req, res) => {
   db.run('DELETE FROM students WHERE id = ?', [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
